@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #faf8f5;
+  color: #2a453f;
+}
+
+::selection {
+  background: #9e7719;
+  color: #faf8f5;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.snap-x-mandatory {
+  scroll-snap-type: x mandatory;
+}
+.snap-start {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.field {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(42, 69, 63, 0.1);
+  background: rgba(255, 255, 255, 0.68);
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  color: #2a453f;
+  outline: none;
+}
+.field:focus {
+  border-color: rgba(158, 119, 25, 0.4);
+  box-shadow: 0 0 0 3px rgba(158, 119, 25, 0.08);
+}
+
+.share-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(42, 69, 63, 0.9);
+}
+.share-item:hover { background: rgba(42, 69, 63, 0.05); }
+
+.pay-chip {
+  border-radius: 9999px;
+  border: 1px solid rgba(42, 69, 63, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.25rem 0.75rem;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(42, 69, 63, 0.65);
+}
+
+@media print {
+  .no-print { display: none !important; }
+}
