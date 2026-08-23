@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Cinzel, Marcellus, Jost } from "next/font/google";
-// CSS is processed by Next.js at build time; TypeScript may not have a declaration for it.
-// @ts-expect-error -- side-effect CSS import handled by Next.js
+
 import "./globals.css";
 import { defaultSeoDescription, defaultSeoTitle, getSiteUrl } from "@/lib/site";
 import { SpeedInsights } from "@vercel/speed-insights/next";
