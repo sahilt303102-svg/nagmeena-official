@@ -6,12 +6,12 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
-  Loader2,
   PackageOpen,
   ShoppingBag,
   XCircle,
 } from "lucide-react";
 import { forgetOrder, readRememberedOrders, updateRememberedOrder } from "@/lib/order-client";
+import NagmeenaLoader from "@/components/NagmeenaLoader";
 
 type Item={
   product_code:string;
@@ -91,7 +91,7 @@ export default function OrdersPage(){
         </div>
       </div>
 
-      {loading?<div className="mt-6 rounded-[28px] border border-white/60 bg-white/75 p-10 text-center shadow-sm"><Loader2 className="mx-auto animate-spin text-gold"/><p className="mt-3 text-sm text-emerald/50">Checking your orders…</p></div>
+      {loading?<NagmeenaLoader text="Checking your orders..." />
       :rows.length===0?<div className="mt-6 rounded-[28px] border border-white/60 bg-white/75 p-10 text-center shadow-sm"><PackageOpen className="mx-auto text-gold" size={34}/><h2 className="mt-3 font-heading text-xl">No recent orders on this device</h2><p className="mt-2 text-sm text-emerald/50">When you submit an order, its private status will appear here.</p><a href="/#collections" className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald px-5 py-3 text-sm font-semibold text-white"><ShoppingBag size={16}/> Continue Shopping</a></div>
       :<>
         <section className="mt-7"><div className="mb-3 flex items-center justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-gold">Active</p><h2 className="font-heading text-2xl">Current Orders</h2></div><span className="rounded-full border border-gold/20 bg-gold/5 px-3 py-1 text-xs font-semibold">{current.length}</span></div>{current.length?<div className="space-y-3">{current.map(row=><OrderCard key={row.token} row={row}/>)}</div>:<div className="rounded-3xl border border-dashed border-emerald/12 bg-white/45 p-6 text-center text-sm text-emerald/45">No order is currently under review.</div>}</section>

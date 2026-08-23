@@ -7,6 +7,7 @@ import type { Product } from "@/lib/products";
 import { clearCart,readCart,type CartItem } from "@/lib/cart";
 import { rememberOrder } from "@/lib/order-client";
 import { deliveryChargeForPincode,isFreeDeliveryPincode,isValidPincode,normalizePincode } from "@/lib/delivery";
+import NagmeenaLoader from "@/components/NagmeenaLoader";
 
 const UPI_ID="nagmahdfc303102@ybl";
 const WHATSAPP="919599502046";
@@ -355,7 +356,7 @@ export default function BuyNowCheckout({ product, variantId }: { product?: Produ
   const deliveryFormValid = !deliveryValidation && !addressLookup;
   const finalReady = deliveryReady && paymentDoneConfirmed && proofUploadState==="uploaded" && Boolean(order?.proof_url) && paidConfirm && whatsAppClicked && !processingProof && !uploading && !submitting;
   const minutes = Math.floor(remaining / 60000), seconds = Math.floor((remaining % 60000) / 1000);
-  if (loading) return <main className="min-h-screen bg-base px-5 pt-32 text-emerald"><div className="mx-auto max-w-4xl rounded-3xl bg-white/70 p-10 text-center"><Loader2 className="mx-auto animate-spin text-gold"/><p className="mt-4 text-sm text-emerald/55">Preparing your secure order…</p></div></main>;
+  if (loading) return <NagmeenaLoader text="Preparing your order..." />;
   if (error && !order) return <main className="min-h-screen bg-base px-5 pt-32 text-emerald"><div className="mx-auto max-w-xl rounded-3xl bg-white/75 p-8 text-center"><p className="font-semibold text-red-600">{error}</p><div className="mt-5 flex justify-center gap-3"><button onClick={retry} className="rounded-full bg-emerald px-5 py-3 text-sm font-semibold text-white">Try again</button><a href="/#collections" className="rounded-full border px-5 py-3 text-sm font-semibold">Back to Collection</a></div></div></main>;
 
   const freeDelivery = isValidPincode(form.pincode) && isFreeDeliveryPincode(form.pincode);

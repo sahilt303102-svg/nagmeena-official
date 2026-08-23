@@ -81,3 +81,37 @@ body {
 @media print {
   .no-print { display: none !important; }
 }
+
+/* NAGMEENA branded page loader */
+@keyframes nagmeenaOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nagmeenaHalo {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.75;
+  }
+}
+
+@keyframes nagmeenaLogoBreath {
+  0%, 100% { transform: scale(0.99); }
+  50% { transform: scale(1.015); }
+}
+
+@keyframes nagmeenaText {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nagmeena-reduce-motion,
+  .nagmeena-reduce-motion * {
+    animation: none !important;
+  }
+}
