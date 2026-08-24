@@ -34,6 +34,7 @@ desktop.ini
 # editor files
 .vscode/
 .idea/
+supabase/migrations/2026-08-24-v23-customer-tracking.sql
 
 # TypeScript
 *.tsbuildinfo

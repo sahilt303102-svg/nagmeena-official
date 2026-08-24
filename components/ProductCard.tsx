@@ -51,6 +51,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const [cartQty, setCartQty] = useState(0);
   const [toast,setToast]=useState("");
   const touchStartX = useRef<number | null>(null);
+  const cardTouchStartX = useRef<number | null>(null);
+  const cardDidSwipe = useRef(false);
 
   const imageList = product.images.length ? product.images : [{ url: "/logo.jpg", sortOrder: 0, isPrimary: true }];
   const detailImage = imageList[detailImageIndex] || imageList[0];
@@ -252,7 +254,7 @@ export default function ProductCard({ product }: { product: Product }) {
         className="overflow-hidden rounded-3xl border border-white/30 bg-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.08),inset_0_1px_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl transition-shadow duration-300 hover:shadow-[0_16px_48px_0_rgba(0,0,0,0.12),inset_0_1px_1px_0_rgba(255,255,255,0.8)]"
       >
         <div className="relative aspect-[4/5] overflow-hidden rounded-t-[calc(1.5rem-1px)]">
-          <div ref={trackRef} onScroll={() => { const track = trackRef.current; if (track) setActiveSlide(Math.round(track.scrollLeft / track.clientWidth)); }} className="no-scrollbar flex h-full snap-x-mandatory overflow-x-auto">
+          <div ref={trackRef} onTouchStart={(event)=>{cardTouchStartX.current=event.touches[0]?.clientX??null;cardDidSwipe.current=false;}} onTouchMove={(event)=>{const start=cardTouchStartX.current,end=event.touches[0]?.clientX;if(start!=null&&end!=null&&Math.abs(end-start)>12)cardDidSwipe.current=true;}} onTouchEnd={()=>{window.setTimeout(()=>{cardDidSwipe.current=false;cardTouchStartX.current=null;},0);}} onClick={()=>{if(!cardDidSwipe.current)openDetails();}} onScroll={() => { const track = trackRef.current; if (track) setActiveSlide(Math.round(track.scrollLeft / track.clientWidth)); }} className="no-scrollbar flex h-full cursor-pointer snap-x-mandatory overflow-x-auto" aria-label={`Open details for ${product.productCode}`}> 
             {imageList.map((image, i) => (
               <div key={image.id || `${image.url}-${i}`} className="relative h-full w-full flex-shrink-0 snap-start bg-gradient-to-br from-[#f2ece0] to-[#e8ddc9]">
                 {image.url.startsWith("http") ? (
@@ -265,9 +267,9 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
           {imageList.length > 1 && <>
             <div className="absolute bottom-3 left-3 right-3 hidden items-center justify-between md:flex">
-              <motion.button type="button" onClick={() => scrollCardImage("prev")} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} aria-label="Previous product image" className="flex h-9 w-11 items-center justify-center rounded-full border border-white/55 bg-white/85 text-emerald shadow-md backdrop-blur-md"><ChevronLeft size={18} /></motion.button>
+              <motion.button type="button" onClick={(event) => { event.stopPropagation(); scrollCardImage("prev"); }} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} aria-label="Previous product image" className="flex h-9 w-11 items-center justify-center rounded-full border border-white/55 bg-white/85 text-emerald shadow-md backdrop-blur-md"><ChevronLeft size={18} /></motion.button>
               <div className="pointer-events-none flex items-center gap-1.5 rounded-full border border-white/30 bg-white/45 px-3 py-1.5 backdrop-blur-md">{imageList.map((image, i) => <span key={image.id || i} className={`h-1.5 rounded-full transition-all duration-300 ${i === activeSlide ? "w-4 bg-gold" : "w-1.5 bg-emerald/20"}`} />)}</div>
-              <motion.button type="button" onClick={() => scrollCardImage("next")} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} aria-label="Next product image" className="flex h-9 w-11 items-center justify-center rounded-full border border-white/55 bg-white/85 text-emerald shadow-md backdrop-blur-md"><ChevronRight size={18} /></motion.button>
+              <motion.button type="button" onClick={(event) => { event.stopPropagation(); scrollCardImage("next"); }} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }} aria-label="Next product image" className="flex h-9 w-11 items-center justify-center rounded-full border border-white/55 bg-white/85 text-emerald shadow-md backdrop-blur-md"><ChevronRight size={18} /></motion.button>
             </div>
             <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/30 bg-white/40 px-3 py-1.5 backdrop-blur-md md:hidden">{imageList.map((image, i) => <span key={image.id || i} className={`h-1.5 rounded-full transition-all duration-300 ${i === activeSlide ? "w-4 bg-gold" : "w-1.5 bg-emerald/20"}`} />)}</div>
             <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1 rounded-full border border-white/30 bg-white/40 px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-wide text-emerald/80 backdrop-blur-md md:hidden">Swipe <ChevronRight size={11} /></div>

@@ -352,10 +352,24 @@ export async function DELETE(request: Request) {
   if (!(await getAuthenticatedAdmin(request))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await request.json();
-    if (!body.id) return NextResponse.json({ error: "Product id is required." }, { status: 400 });
-    const response = await db(`products?id=eq.${encodeURIComponent(body.id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
-    if (!response.ok) return NextResponse.json({ error: friendlyDatabaseError(await response.text()) }, { status: response.status });
-    return NextResponse.json({ success: true });
+    const ids = Array.isArray(body.ids) ? body.ids.filter((id: unknown): id is string => typeof id === "string" && Boolean(id)) : (body.id ? [String(body.id)] : []);
+    if (!ids.length) return NextResponse.json({ error: "Product id is required." }, { status: 400 });
+    // Validate every selected product before deleting any of them, preventing partial bulk deletion.
+    if (ids.length > 1) {
+      for (const id of ids) {
+        const variantsResponse = await db(`product_variants?product_id=eq.${encodeURIComponent(id)}&is_active=eq.true&select=stock_quantity`);
+        if (!variantsResponse.ok) return NextResponse.json({ error: friendlyDatabaseError(await variantsResponse.text()) }, { status: variantsResponse.status });
+        const variants = await variantsResponse.json();
+        if (variants.some((variant: any) => Number(variant.stock_quantity || 0) > 0)) return NextResponse.json({ error: "One of the selected products is back in stock. Refresh the catalog and select again." }, { status: 409 });
+      }
+    }
+    let deleted = 0;
+    for (const id of ids) {
+      const response = await db(`products?id=eq.${encodeURIComponent(id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      if (!response.ok) return NextResponse.json({ error: friendlyDatabaseError(await response.text()) }, { status: response.status });
+      deleted += 1;
+    }
+    return NextResponse.json({ success: true, deleted });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not delete product." }, { status: 500 });
   }

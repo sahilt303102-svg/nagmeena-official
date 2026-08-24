@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedAdmin } from "@/lib/admin-auth";
 import { getCatalog } from "@/lib/catalog";
-import { sendOrderConfirmationEmail } from "@/lib/order-email";
+import { sendOrderConfirmationEmail, sendOrderTrackingEmail } from "@/lib/order-email";
 
 export const runtime="nodejs";
 const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SECRET_KEY;
@@ -71,6 +71,39 @@ export async function PATCH(request:Request){
  if(!(await getAuthenticatedAdmin(request)))return NextResponse.json({error:"Unauthorized"},{status:401});
  try{
   const body=await request.json(),action=String(body.action||"");
+
+  if(action==="save_tracking"){
+   if(!body.id)return NextResponse.json({error:"Order is required."},{status:400});
+   const clean=(value:unknown,max=500)=>String(value??"").trim().slice(0,max)||null;
+   const trackingUrl=clean(body.tracking_url,1000);
+   if(trackingUrl){try{const parsed=new URL(trackingUrl);if(!["http:","https:"].includes(parsed.protocol))throw new Error();}catch{return NextResponse.json({error:"Tracking URL must be a valid http(s) URL."},{status:400});}}
+   const patch={shipping_courier:clean(body.shipping_courier,120),tracking_id:clean(body.tracking_id,180),tracking_url:trackingUrl,estimated_delivery:clean(body.estimated_delivery,180),shipping_notes:clean(body.shipping_notes,800),updated_at:new Date().toISOString()};
+   const r=await db(`orders?id=eq.${encodeURIComponent(body.id)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
+   if(!r.ok)return NextResponse.json({error:"Could not save tracking details. Run the V23 tracking migration if this is the first deployment."},{status:r.status});
+   return NextResponse.json({order:(await r.json())[0]});
+  }
+
+  if(action==="send_tracking_email"){
+   if(!body.id)return NextResponse.json({error:"Order is required."},{status:400});
+   const r=await db(`orders?id=eq.${encodeURIComponent(body.id)}&select=*&limit=1`);
+   if(!r.ok)return NextResponse.json({error:"Could not load order."},{status:502});
+   const order=(await r.json())[0];
+   if(!order)return NextResponse.json({error:"Order not found."},{status:404});
+   if(!order.customer_email)return NextResponse.json({error:"This customer did not provide an email address."},{status:400});
+   if(!order.tracking_id&&!order.tracking_url)return NextResponse.json({error:"Add a Tracking ID or Tracking URL first."},{status:400});
+   try{
+    const items=await getOrderItems(order.id);
+    const result=await sendOrderTrackingEmail({...order,items});
+    const stamp=new Date().toISOString();
+    const patch=result.status==="sent"?{tracking_email_sent_at:stamp,tracking_email_last_error:null,updated_at:stamp}:{tracking_email_last_error:"Email service is not configured.",updated_at:stamp};
+    const update=await db(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
+    return NextResponse.json({order:update.ok?(await update.json())[0]:order,email:result});
+   }catch(e){
+    const message=e instanceof Error?e.message:"Tracking email failed.";
+    await db(`orders?id=eq.${encodeURIComponent(order.id)}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({tracking_email_last_error:message.slice(0,500),updated_at:new Date().toISOString()})}).catch(()=>null);
+    return NextResponse.json({error:message},{status:502});
+   }
+  }
 
   if(action==="resend_confirmation_email"){
    if(!body.id)return NextResponse.json({error:"Order is required."},{status:400});

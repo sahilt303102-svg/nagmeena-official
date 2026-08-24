@@ -120,3 +120,66 @@ export async function sendOrderConfirmationEmail(order: ConfirmationEmailOrder) 
   if (!response.ok) { const detail=[payload?.message,payload?.name,payload?.statusCode].filter(Boolean).join(" · "); throw new Error(detail || `Resend rejected the email (${response.status}).`); }
   return { status: "sent" as const, id: payload?.id || null };
 }
+
+export type TrackingEmailOrder = ConfirmationEmailOrder & {
+  shipping_courier?: string | null;
+  tracking_id?: string | null;
+  tracking_url?: string | null;
+  estimated_delivery?: string | null;
+  shipping_notes?: string | null;
+};
+
+export async function sendOrderTrackingEmail(order: TrackingEmailOrder) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.ORDER_EMAIL_FROM;
+  const email = String(order.customer_email || "").trim();
+  if (!email) return { status: "not_provided" as const };
+  if (!apiKey || !from) return { status: "not_configured" as const, error: "RESEND_API_KEY or ORDER_EMAIL_FROM is missing." };
+
+  const siteUrl = getSiteUrl();
+  const statusUrl = order.public_token
+    ? `${siteUrl}/payment-status?token=${encodeURIComponent(order.public_token)}`
+    : `${siteUrl}/orders`;
+  const courier = String(order.shipping_courier || "").trim();
+  const trackingId = String(order.tracking_id || "").trim();
+  const trackingUrl = String(order.tracking_url || "").trim();
+  const estimated = String(order.estimated_delivery || "").trim();
+  const note = String(order.shipping_notes || "").trim();
+
+  if (!trackingId && !trackingUrl) throw new Error("Tracking ID or Tracking URL is required before sending a tracking email.");
+
+  const trackingButton = trackingUrl
+    ? `<a href="${esc(trackingUrl)}" style="display:inline-block;background:#2a453f;color:white;text-decoration:none;border-radius:999px;padding:13px 22px;font-weight:700;">Track Shipment</a>`
+    : "";
+
+  const html = `
+  <div style="background:#f7f1e6;padding:28px 12px;font-family:Arial,sans-serif;color:#2a453f;">
+    <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #eadfc8;border-radius:24px;overflow:hidden;">
+      <div style="background:#2a453f;padding:28px;text-align:center;">
+        <div style="color:#d3ad63;font-size:12px;letter-spacing:3px;font-weight:700;">NAGMEENA</div>
+        <h1 style="color:#fff;margin:10px 0 0;font-size:27px;">Your order is on the way</h1>
+      </div>
+      <div style="padding:28px;">
+        <p style="margin:0 0 14px;">Hi ${esc(order.customer_name || "there")},</p>
+        <p style="margin:0 0 22px;line-height:1.6;color:#60736d;">We have an update for your NAGMEENA order <b>${esc(order.order_code)}</b>.</p>
+        <div style="background:#fbf8f2;border:1px solid #eadfc8;border-radius:18px;padding:18px;">
+          ${courier ? `<div style="margin-bottom:10px;"><span style="font-size:12px;color:#887247;">COURIER</span><div style="font-weight:700;margin-top:3px;">${esc(courier)}</div></div>` : ""}
+          ${trackingId ? `<div style="margin-bottom:10px;"><span style="font-size:12px;color:#887247;">TRACKING ID</span><div style="font-weight:700;margin-top:3px;">${esc(trackingId)}</div></div>` : ""}
+          ${estimated ? `<div><span style="font-size:12px;color:#887247;">ESTIMATED DELIVERY</span><div style="font-weight:700;margin-top:3px;">${esc(estimated)}</div></div>` : ""}
+        </div>
+        ${note ? `<div style="margin-top:16px;padding:15px;border-radius:16px;background:#f7f1e6;color:#60736d;line-height:1.6;">${esc(note)}</div>` : ""}
+        <div style="text-align:center;margin-top:24px;">${trackingButton}${trackingButton ? `<div style="height:10px"></div>` : ""}<a href="${esc(statusUrl)}" style="display:inline-block;color:#2a453f;text-decoration:none;border:1px solid #d9c9a8;border-radius:999px;padding:12px 20px;font-weight:700;">View NAGMEENA Order</a></div>
+        <p style="font-size:12px;color:#7f8c88;text-align:center;margin:24px 0 0;line-height:1.5;">For help, WhatsApp NAGMEENA at +91 95995 02046.</p>
+      </div>
+    </div>
+  </div>`;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to: [email], subject: `Tracking update for NAGMEENA order ${order.order_code}`, html }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) { const detail=[payload?.message,payload?.name,payload?.statusCode].filter(Boolean).join(" · "); throw new Error(detail || `Resend rejected the email (${response.status}).`); }
+  return { status: "sent" as const, id: payload?.id || null };
+}
