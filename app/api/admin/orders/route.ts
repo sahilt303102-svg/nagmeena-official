@@ -72,6 +72,15 @@ export async function PATCH(request:Request){
  try{
   const body=await request.json(),action=String(body.action||"");
 
+  if(action==="remove_customer_record"){
+   if(!body.id)return NextResponse.json({error:"Order is required."},{status:400});
+   const r=await db(`orders?id=eq.${encodeURIComponent(body.id)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({customer_record_visible:false,updated_at:new Date().toISOString()})});
+   if(!r.ok)return NextResponse.json({error:"Could not remove this customer entry. Run the V23.1 customer-record migration first."},{status:r.status});
+   const rows=await r.json();
+   if(!rows[0])return NextResponse.json({error:"Order not found."},{status:404});
+   return NextResponse.json({order:rows[0]});
+  }
+
   if(action==="save_tracking"){
    if(!body.id)return NextResponse.json({error:"Order is required."},{status:400});
    const clean=(value:unknown,max=500)=>String(value??"").trim().slice(0,max)||null;
