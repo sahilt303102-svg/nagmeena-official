@@ -565,58 +565,83 @@ export default function AdminOrders({ onNotify }: { onNotify: (type: "success" |
                     ? "border-red-100 bg-[linear-gradient(135deg,rgba(255,255,255,.92),rgba(254,242,242,.78))]"
                     : "border-gold/12 bg-[linear-gradient(135deg,rgba(255,255,255,.92),rgba(250,247,239,.8))]";
               return (
-                <article key={o.id} className={`overflow-hidden rounded-[26px] border shadow-[0_10px_32px_rgba(24,57,48,.05)] ${cardStyle}`}>
+                <article key={o.id} className={`overflow-hidden rounded-[26px] border shadow-[0_14px_40px_rgba(24,57,48,.06)] ${cardStyle}`}>
                   <div className="p-4 sm:p-5">
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        className="mt-1 shrink-0"
-                        checked={selected.includes(o.id)}
-                        onChange={(e) => setSelected((current) => (e.target.checked ? [...current, o.id] : current.filter((id) => id !== o.id)))}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex min-w-0 flex-wrap items-center gap-2">
-                            <span className="break-all font-mono text-xs font-semibold sm:text-sm">{o.order_code}</span>
-                            <span className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${tab === "accepted" ? "bg-emerald text-white" : tab === "rejected" ? "bg-red-50 text-red-700 ring-1 ring-red-200" : "bg-gold/10 text-gold ring-1 ring-gold/15"}`}>{formatStatus(tab, o)}</span>
-                            {o.tracking_id && <span className="rounded-full border border-gold/20 bg-white px-2 py-1 text-[9px] font-semibold text-gold"><Truck size={10} className="mr-1 inline" />Tracked</span>}
-                          </div>
-                          <span className="text-sm font-semibold text-emerald">{money(o.amount)}</span>
-                        </div>
-
-                        <div className="mt-3 grid gap-3 sm:grid-cols-[auto_1fr]">
-                          {o.items?.[0]?.image_url && (
-                            <div className="relative h-24 w-20 overflow-hidden rounded-2xl bg-[#eee7da] shadow-sm">
-                              <Image src={o.items[0].image_url} alt={o.items[0].product_name} fill sizes="80px" className="object-cover" />
+                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-5">
+                      <div className="min-w-0">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            className="mt-1 shrink-0"
+                            checked={selected.includes(o.id)}
+                            onChange={(e) => setSelected((current) => (e.target.checked ? [...current, o.id] : current.filter((id) => id !== o.id)))}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="break-all font-mono text-xs font-bold tracking-tight sm:text-sm">{o.order_code}</span>
+                              <span className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${tab === "accepted" ? "bg-emerald text-white shadow-[0_4px_12px_rgba(31,82,70,.14)]" : tab === "rejected" ? "bg-red-50 text-red-700 ring-1 ring-red-200" : "bg-gold/10 text-gold ring-1 ring-gold/15"}`}>{formatStatus(tab, o)}</span>
+                              {o.tracking_id && <span className="inline-flex items-center gap-1 rounded-full border border-gold/20 bg-white/85 px-2.5 py-1 text-[9px] font-semibold text-gold"><Truck size={10} />Tracked</span>}
                             </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold leading-5">{o.items?.map((i) => `${i.product_name}${i.variant_color ? ` (${i.variant_color})` : ""} × ${i.quantity}`).join(", ") || "Order"}</p>
-                            <p className="mt-1 text-xs text-emerald/55">{o.customer_name || "Customer"} • {o.customer_phone || "No phone"}</p>
-                            <p className="mt-1 text-[11px] text-emerald/40">{new Date(o.created_at).toLocaleString("en-IN")}</p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              <span className="rounded-full border border-emerald/8 bg-white/80 px-2.5 py-1 text-[10px] font-semibold">Subtotal {money(subtotal)}</span>
-                              <span className="rounded-full border border-emerald/8 bg-white/80 px-2.5 py-1 text-[10px] font-semibold">Delivery {delivery ? money(delivery) : "FREE"}</span>
+                            <p className="mt-1.5 text-[11px] text-emerald/40">{new Date(o.created_at).toLocaleString("en-IN")}</p>
+
+                            <div className="mt-4 grid gap-3 sm:grid-cols-[96px_minmax(0,1fr)] sm:items-center">
+                              {o.items?.[0]?.image_url ? (
+                                <div className="relative h-28 w-24 overflow-hidden rounded-[20px] border border-white/70 bg-[#eee7da] shadow-[0_8px_24px_rgba(39,56,46,.10)]">
+                                  <Image src={o.items[0].image_url} alt={o.items[0].product_name} fill sizes="96px" className="object-cover" />
+                                </div>
+                              ) : (
+                                <div className="flex h-28 w-24 items-center justify-center rounded-[20px] border border-dashed border-emerald/10 bg-white/55 text-emerald/25"><PackageCheck size={22} /></div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold leading-5 sm:text-[15px]">{o.items?.map((i) => `${i.product_name}${i.variant_color ? ` (${i.variant_color})` : ""} × ${i.quantity}`).join(", ") || "Order"}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-emerald/55">
+                                  <span className="font-medium text-emerald/75">{o.customer_name || "Customer"}</span>
+                                  <span>{o.customer_phone || "No phone"}</span>
+                                </div>
+                                <div className="mt-3 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-emerald/8 bg-white/70 px-3 py-2 text-[10px] font-semibold text-emerald/65">
+                                  <span>Product {money(subtotal)}</span>
+                                  <span className="text-emerald/25">+</span>
+                                  <span>Delivery {delivery ? money(delivery) : "FREE"}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <button onClick={() => openCustomer(o)} className="inline-flex items-center gap-1.5 rounded-full border border-emerald/15 bg-white/85 px-3 py-2 text-[10px] font-semibold transition hover:border-gold/30">
-                            <UserRound size={13} /> Customer Info
-                          </button>
-                          {o.proof_url && <a href={o.proof_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-emerald/15 bg-white/85 px-3 py-2 text-[10px] font-semibold"><ExternalLink size={12} /> Payment proof</a>}
-                          {tab === "accepted" && o.customer_email && !o.confirmation_email_sent_at && <button disabled={updating === o.id} onClick={() => void retryEmail(o.id)} className="inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/5 px-3 py-2 text-[10px] font-semibold"><Mail size={12} /> Send confirmation</button>}
-                        </div>
-
-                        {tab === "upcoming" && (
-                          <div className="mt-4 grid grid-cols-2 gap-2">
-                            <button disabled={updating === o.id} onClick={() => void decide(o.id, "confirmed")} className="rounded-full bg-emerald px-4 py-2.5 text-xs font-semibold text-white shadow-[0_8px_22px_rgba(31,82,70,.14)] transition hover:-translate-y-px disabled:opacity-50">Accept order</button>
-                            <button disabled={updating === o.id} onClick={() => void decide(o.id, "cancelled")} className="rounded-full border border-red-200 bg-white/80 px-4 py-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50">Reject</button>
-                          </div>
-                        )}
-                        {tab === "accepted" && <button disabled={updating === o.id} onClick={() => setReturnOrder(o)} className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald/15 bg-white/85 px-3 py-2 text-[10px] font-semibold"><RotateCcw size={12} /> Process return</button>}
                       </div>
+
+                      <aside className="rounded-[22px] border border-emerald/8 bg-white/65 p-4 lg:flex lg:flex-col lg:justify-between">
+                        <div>
+                          <p className="text-[9px] font-semibold uppercase tracking-[.16em] text-emerald/35">Order total</p>
+                          <p className="mt-1 font-heading text-2xl font-semibold text-emerald">{money(o.amount)}</p>
+                          <div className="mt-3 space-y-1.5 text-[10px] text-emerald/50">
+                            <div className="flex items-center justify-between gap-3"><span>Product</span><span className="font-semibold text-emerald/75">{money(subtotal)}</span></div>
+                            <div className="flex items-center justify-between gap-3"><span>Delivery</span><span className="font-semibold text-emerald/75">{delivery ? money(delivery) : "FREE"}</span></div>
+                          </div>
+                        </div>
+                        <div className="mt-4 border-t border-emerald/8 pt-3">
+                          <p className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-semibold ${tab === "accepted" ? "bg-emerald/8 text-emerald" : tab === "rejected" ? "bg-red-50 text-red-700" : "bg-gold/10 text-gold"}`}>
+                            {tab === "accepted" ? <CheckCircle2 size={11} /> : tab === "rejected" ? <XCircle size={11} /> : <Clock3 size={11} />}
+                            {formatStatus(tab, o)}
+                          </p>
+                          <p className="mt-2 text-[10px] text-emerald/40">{o.tracking_id ? `Tracking ${o.tracking_id}` : tab === "accepted" ? "Tracking not added yet" : tab === "upcoming" ? "Waiting for admin review" : "Order closed"}</p>
+                        </div>
+                      </aside>
+                    </div>
+
+                    <div className="mt-4 flex flex-col gap-2 border-t border-emerald/8 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+                      <button onClick={() => openCustomer(o)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald px-4 py-2.5 text-[11px] font-semibold text-white shadow-[0_7px_18px_rgba(31,82,70,.14)] transition hover:-translate-y-px">
+                        <UserRound size={14} /> Customer Info
+                      </button>
+                      {o.proof_url && <a href={o.proof_url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-gold/20 bg-white/85 px-4 py-2.5 text-[11px] font-semibold text-emerald shadow-sm transition hover:border-gold/35 hover:bg-gold/5"><ExternalLink size={13} /> Payment Proof</a>}
+                      {tab === "accepted" && o.customer_email && !o.confirmation_email_sent_at && <button disabled={updating === o.id} onClick={() => void retryEmail(o.id)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-gold/20 bg-gold/7 px-4 py-2.5 text-[11px] font-semibold text-gold disabled:opacity-40"><Mail size={13} /> Send Confirmation</button>}
+                      {tab === "accepted" && <button disabled={updating === o.id} onClick={() => setReturnOrder(o)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-emerald/12 bg-white/80 px-4 py-2.5 text-[11px] font-semibold text-emerald/70 transition hover:border-gold/25 hover:text-emerald disabled:opacity-40"><RotateCcw size={13} /> Process Return</button>}
+
+                      {tab === "upcoming" && (
+                        <div className="grid flex-1 grid-cols-2 gap-2 sm:ml-auto sm:max-w-[330px]">
+                          <button disabled={updating === o.id} onClick={() => void decide(o.id, "confirmed")} className="min-h-10 rounded-xl bg-emerald px-4 py-2.5 text-xs font-semibold text-white shadow-[0_8px_22px_rgba(31,82,70,.14)] transition hover:-translate-y-px disabled:opacity-50">Accept Order</button>
+                          <button disabled={updating === o.id} onClick={() => void decide(o.id, "cancelled")} className="min-h-10 rounded-xl border border-red-200 bg-white/85 px-4 py-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50">Reject</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </article>
